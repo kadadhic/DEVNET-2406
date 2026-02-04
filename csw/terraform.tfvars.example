@@ -1,0 +1,4 @@
+host = "<CSW-URL>"
+key = "<CSW-KEY>"
+secret = "<CSW-SECRET>"
+
