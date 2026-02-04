@@ -6,6 +6,14 @@ data "fmc_security_zone" "outside" {
   name           = "ciscomcd-outside"
 }
 
+# Fetch Devices
+data "fmc_device" "ftd1" {
+  name = "ciscomcd-kadadhic-mcd-aws-ftdv-gw1-sfeezzwn"
+}
+data "fmc_device" "ftd2" {
+  name = "ciscomcd-kadadhic-mcd-aws-ftdv-gw1-tztfinoy"
+}
+
 # Define network objects for Spoke VPCs
 resource "fmc_network" "spoke1-vpc" {
   name        = "Spoke1-VPC"
@@ -102,4 +110,31 @@ resource "fmc_access_control_policy" "example" {
       send_events_to_fmc   = true
     }
   ]
+}
+
+# Assign policy to devices
+resource "fmc_policy_assignment" "example" {
+  policy_id               = fmc_access_control_policy.example.id
+  policy_type             = "AccessPolicy"
+  
+  targets = [
+    {
+      id   = data.fmc_device.ftd1.id
+      type = "Device"
+      name = data.fmc_device.ftd1.name
+    },
+    {
+      id   = data.fmc_device.ftd2.id
+      type = "Device"
+      name = data.fmc_device.ftd2.name
+    }
+  ]
+}
+
+# Deploy devices
+resource "fmc_device_deploy" "example" {
+  depends_on = [ fmc_policy_assignment.example ]
+  ignore_warning  = true
+  device_id_list  = [data.fmc_device.ftd1.id,data.fmc_device.ftd2.id]
+  deployment_note = "Terraform initiated deployment"
 }
